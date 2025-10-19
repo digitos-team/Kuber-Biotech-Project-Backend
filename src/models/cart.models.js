@@ -1,23 +1,30 @@
-import mongoose from "mongoose";
+import mongoose,{Schema} from "mongoose";
+
+
 
 const cartSchema = new mongoose.Schema({
     user:{
         type:Schema.Types.ObjectId,
         ref:'User'
     },
-    item:[{
-        type:Schema.Types.ObjectId,
-        ref:'Product',
-        max:[20,"Cart Limit exceeds"]
-    }],
-    quantity:{
-        type:Number,
-        default:1
-    },
-    TotalPrice:{
-        type:Number,
-        default:0
+    item: [
+    {
+      productId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Product",
+        required: true
+      },
+      quantity: {
+        type: Number,
+        default: 1
+      }
     }
+  ],
+    total:{
+        type:Number,
+        required:true,
+        default:0
+      }
 
 },{timestamps:true})
 

@@ -1,89 +1,113 @@
 import { isValidObjectId } from "mongoose"
 import {Cart} from "../models/cart.models.js"
+import {Product} from "../models/products.models.js"
 import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
 
-const addItemToCart = asyncHandler(async (req,res) => {
-   //product Id -> req.params
-   //user Id -> req.user
-   //check for the Fields
-   //check for the Product is Already in Cart
-   //create A Cart 
-   //return the response   
-    const {productId} = req.params
-    const userId = req.user._id
 
-   if (!isValidObjectId(productId)) {
-    throw new ApiError(403,"Invalid product id ")
-   }
+const addtocart = asyncHandler(async (req,res) => {
+     //get the user Id from req parameter
+     const userId = req.user._id
+     const {productId} = req.params
 
-   if (!userId) {
-    throw new ApiError(403,"User not loggedIn ")
-   }
+     if (!isValidObjectId(productId)) {
+          throw new ApiError(403,"Invallid Product Id Found")
+     }
 
-   let productQuantity;
-   let productPrice
-   const product = await Cart.findById(productId)
-   
-   if (product) {
-        productQuantity =(product.quantity += 1)
-        productPrice = product.price * productQuantity
-   }
-   console.log(productQuantity);
-   
-   const productAddedTocart = await Cart.create({
-        user:userId,
-        item:productId,
-        quantity:productQuantity,
-        TotalPrice:productPrice
-   })
+     const product = await Product.findById(productId)
+     if (!product) {
+          throw new ApiError(404,"Product not Found")
+     }
+     
+     let cart = await Cart.findOne({user:userId})
+     if (!cart) {
+          cart = await Cart.create({
+               user:userId,
+               item:[{productId}],
+               total:product.price
+          })
+          return res
+      .status(200)
+      .json(new ApiResponse(200, cart, "Cart created successfully"))
+     }
 
-   if (!productAddedTocart) {
-        throw new ApiError(402,"Item Not added To cart")
-   }
+     
 
-   return res
-   .status(200)
-   .json(
-    new ApiResponse(
-        200,
-        productAddedTocart,
-        "Product Added To cart Succesfully"
-    )
-   )
+     const cartproduct = cart.item.find((p)=>p.productId.toString() == productId)
+
+     if (cartproduct) {
+          cartproduct.quantity += 1
+          cart.total += product.price
+
+     }else{
+          cart.item.push({productId})
+          cart.total += product.price
+     }
+
+     await cart.save()
+
+     return res
+     .status(200)
+     .json(
+          new ApiResponse(
+               200,
+               cart,
+               "Cart update Succesfully"
+          )
+     )
 })
 
 const removeItemfromCart = asyncHandler(async (req,res) => {
     //taking product Id from the request 
-    const productId = req.params
+    const {productId} = req.params
 
+    const userId = req.user._id
     if (!isValidObjectId(productId)) {
           throw new ApiError(403,"Invalid Object Id")
      }
-    //get the item from the cart
-     const productFromCart = await Cart.findById(productId)
-     //If the cart does not have product then Gave Product not their in the Cart 
-     if (!productFromCart) {
-          throw new ApiError(404,"Product is not In cart")
+
+    const product = await Product.findById(productId)
+     if (!product) {
+          throw new ApiError(403,"Product Not Found")
      }
-    //if it is their and quantity is more then one then Remove them by 1 
-    //if the quantity is 1 then remove the product From cart
-     let deleteProductFromCart;
-     if (productFromCart.quantity === 0){
-          deleteProductFromCart = await Cart.findByIdAndDelete(productId)
-     }else{
-          productFromCart.quantity - 1
+
+    let cart = await Cart.findOne({user:userId})
+
+    if (!cart) {
+         throw new ApiError(404,"Cart Is Empty")
+    }
+
+     const cartproduct = cart.item.find((p)=>p.productId.toString() === productId)
+
+
+     if (!cartproduct) {
+          throw new ApiError(404,"Product is not in cart")
      }
-     console.log(deleteProductFromCart);
-     
+
+     if (cartproduct.quantity > 1) {
+        // Just decrease the quantity
+        cartproduct.quantity -= 1;
+    } else {
+        // Remove the product from the array
+        cart.item = cart.item.filter(
+            (p) => p.productId.toString() !== productId
+        );
+    }
+
+     cart.total -= product.price
+
+     if (cart.total<0)cart.total=0
+     await cart.save();
+
+    
     //return the response 
     return res
     .status(200)
     .json(
      new ApiResponse(
           200,
-          deleteProductFromCart,
+          cart,
           "Product Remove Succesfully from the Cart"
      )
     )
@@ -121,4 +145,4 @@ const getUserCartList = asyncHandler(async (req,res) => {
 
 
 
-export {addItemToCart,removeItemfromCart,getUserCartList}
+export {addtocart,removeItemfromCart,getUserCartList}
