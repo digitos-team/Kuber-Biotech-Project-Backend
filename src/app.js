@@ -28,3 +28,6 @@ app.use("/api/v1/category",cartegoryRouter)
 import reviewRouter from './routes/review.routes.js'
 app.use('/api/v1/review',reviewRouter)
 
+//Order Router
+import OrderRouter from "./routes/order.routes.js"
+app.use("/api/v1/order",OrderRouter)

@@ -13,6 +13,14 @@ const userproductSchema = new mongoose.Schema({
 })
 
 const orderSchema = new mongoose.Schema({
+    orderId:{
+        type:String,
+        required:true
+    },
+    OrderStatus:{
+        type:String,
+        required:true
+    },
     user:{
         type:Schema.Types.ObjectId,
         ref:"User"
