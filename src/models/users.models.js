@@ -4,12 +4,6 @@ import jwt from "jsonwebtoken"
 
 
 const userSchema =  new mongoose.Schema({
-    username:{
-        type:String,
-        required:true,
-        unique:true,
-        trim:true
-    },
     email:{
         type:String,
         required:true,
@@ -25,10 +19,6 @@ const userSchema =  new mongoose.Schema({
         enum:["user","admin"],
         default:"user"
     },
-    orders:[{
-        type:Schema.Types.ObjectId,
-        ref:"Product"
-    }],
     refreshToken:{
         type:String
     },

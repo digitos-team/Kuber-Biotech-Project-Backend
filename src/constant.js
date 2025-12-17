@@ -1,3 +1,1 @@
-export const DB_Name = "Ecommerce"
-
- 
+export const DB_Name = "Kuber_Bio_Tech";

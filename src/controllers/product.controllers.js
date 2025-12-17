@@ -1,134 +1,181 @@
 import { isValidObjectId } from "mongoose"
-import {Product} from "../models/products.models.js"
+import { Product } from "../models/products.models.js"
 import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
-import {uploadFile} from "../utils/fileupload.js"
+import { uploadFile } from "../utils/fileupload.js"
+import { translateToMarathi } from "../utils/translator.js"
 
 
-const getAllProduct = asyncHandler(async (req,res) => {
-    //add the page no ,skip and limit
-    //get the product based on this
-    //count the total number of product not neccessary optional but for Frontend
-    //return the Product
-    
-    const limit = parseInt(req.query.limit)
-    const page = parseInt(req.query.page)
-    const skip = (page-1)*limit
+const getAllProduct = asyncHandler(async (req, res) => {
+  //add the page no ,skip and limit
+  //get the product based on this
+  //count the total number of product not neccessary optional but for Frontend
+  //return the Product
 
-    const product = await Product.find().skip(skip).limit(limit)
+  const limit = parseInt(req.query.limit)
+  const page = parseInt(req.query.page)
+  const skip = (page - 1) * limit
 
-    const totalproducts = await Product.countDocuments()
-    
-    if (!product) {
-        throw new ApiError(403,"There is Something Went Wrong")
-    }
+  const product = await Product.find().skip(skip).limit(limit)
 
-    return res.status(200)
+  const totalproducts = await Product.countDocuments()
+
+  if (!product) {
+    throw new ApiError(403, "There is Something Went Wrong")
+  }
+
+  return res.status(200)
     .json(
-        new ApiResponse(
-            200,
-           [ page,totalproducts,product],
-            "Product Fetched Succesfully"
-        )   
+      new ApiResponse(
+        200,
+        [page, totalproducts, product],
+        "Product Fetched Succesfully"
+      )
     )
 
 })
 
-const addProduct = asyncHandler(async (req,res) => { 
-    const {name,description,price,stock,category} =req.body
-    let imageUrl = []
-    
+const addProduct = asyncHandler(async (req, res) => {
+  const { name, description, price, category } = req.body
+  let imageUrl = []
 
-    if (!req.files || req.files.length === 0) {
-        throw new ApiError(404,"File not Uploaded")
-    }
-    
-    for (const file of req.files) {
-        const productimages = await uploadFile(file.path)
-        if(productimages) imageUrl.push(productimages.url)
-    }
-     
-    
-    if (!name || !description || !price || !stock|| !category) {
-        throw new ApiError(403,"Every Field Is required")
-    }
-    if (stock > 100) {
-        throw new ApiError(403,"We Cannot Take that much Stock")
-    }
 
-   
-    
-   
-    
-    const addedProduct = await Product.create({
-        name,
-        description,
-        price,
-        stock,
-        category,
-        images:imageUrl
-    })
+  if (!req.files || req.files.length === 0) {
+    throw new ApiError(404, "File not Uploaded")
+  }
 
-    return res.status(200)
+  for (const file of req.files) {
+    const productimages = await uploadFile(file.path)
+    if (productimages) imageUrl.push(productimages.url)
+  }
+
+
+  if (!name || !description || !price || !category) {
+    throw new ApiError(403, "Every Field Is required")
+  }
+
+  // Category mapping for English to Marathi
+  const categoryMap = {
+    "Granule Products": "ग्रॅन्युल उत्पादने",
+    "Liquid Products": "द्रव उत्पादने"
+  };
+
+  // Validate category
+  if (!categoryMap[category]) {
+    throw new ApiError(400, "Invalid category. Must be 'Granule Products' or 'Liquid Products'")
+  }
+
+  // Translate name and description to Marathi
+  const nameMarathi = await translateToMarathi(name)
+  const descriptionMarathi = await translateToMarathi(description)
+
+  // Create bilingual product object
+  const addedProduct = await Product.create({
+    name: {
+      en: name,
+      mr: nameMarathi
+    },
+    description: {
+      en: description,
+      mr: descriptionMarathi
+    },
+    price,
+    images: imageUrl,
+    category: {
+      en: category,
+      mr: categoryMap[category]
+    }
+  })
+
+  return res.status(200)
     .json(
-        new ApiResponse(200,addedProduct,"Product Added Succesfully")
+      new ApiResponse(200, addedProduct, "Product Added Succesfully")
     )
 })
 
-const editProduct = asyncHandler(async (req,res) => {
-    const {newname,newdescription,newprice,newcategory} = req.body
+const editProduct = asyncHandler(async (req, res) => {
+  const { productId } = req.params;
 
-    const {productId} = req.params
-   
-    
-    if(!isValidObjectId(productId)) {
-        throw new ApiError(402,"Invalid Object Id")
+  if (!isValidObjectId(productId)) {
+    throw new ApiError(400, "Invalid Product ID");
+  }
+
+  if (!req.body || Object.keys(req.body).length === 0) {
+    throw new ApiError(400, "At least one field is required to update");
+  }
+
+  // Category mapping for bilingual support
+  const categoryMap = {
+    "Granule Products": "ग्रॅन्युल उत्पादने",
+    "Liquid Products": "द्रव उत्पादने"
+  };
+
+  const updateFields = {};
+
+  // Handle name update (bilingual)
+  if (req.body.newname) {
+    const nameMarathi = await translateToMarathi(req.body.newname);
+    updateFields["name.en"] = req.body.newname;
+    updateFields["name.mr"] = nameMarathi;
+  }
+
+  // Handle description update (bilingual)
+  if (req.body.newdescription) {
+    const descriptionMarathi = await translateToMarathi(req.body.newdescription);
+    updateFields["description.en"] = req.body.newdescription;
+    updateFields["description.mr"] = descriptionMarathi;
+  }
+
+  // Handle price update
+  if (req.body.newprice) {
+    updateFields.price = req.body.newprice;
+  }
+
+  // Handle category update (bilingual)
+  if (req.body.newcategory) {
+    if (!categoryMap[req.body.newcategory]) {
+      throw new ApiError(400, "Invalid category. Must be 'Granule Products' or 'Liquid Products'");
     }
+    updateFields["category.en"] = req.body.newcategory;
+    updateFields["category.mr"] = categoryMap[req.body.newcategory];
+  }
 
-    if (!newname && !newdescription && !newprice && !newcategory) {
-        throw new ApiError(403,"Atleast One neeed To be change")
-    }
+  if (Object.keys(updateFields).length === 0) {
+    throw new ApiError(400, "No valid fields provided for update");
+  }
 
+  const editedProduct = await Product.findByIdAndUpdate(
+    productId,
+    { $set: updateFields },
+    { new: true } // return updated document
+  );
 
-    const editedProduct = await Product.findByIdAndUpdate(
-        productId,
-        {
-          name:newname,
-          description:newdescription,
-          price:newprice,
-          category:newcategory  
-        }
-    )
+  if (!editedProduct) {
+    throw new ApiError(404, "Product not found");
+  }
 
-    if (!editedProduct) {
-        throw new ApiError(403,"Problem While Editing Product")
-    }
+  return res.status(200).json(
+    new ApiResponse(200, editedProduct, "Product updated successfully")
+  );
+});
 
-    return res
-    .status(200)
+const deleteProduct = asyncHandler(async (req, res) => {
+
+  const { productId } = req.params
+
+  if (!isValidObjectId(productId)) {
+    throw new ApiError(403, "Invalid Product Id")
+  }
+
+  const deletingProduct = await Product.findByIdAndDelete(productId)
+  return res.status(200)
     .json(
-        new ApiResponse(200,editedProduct,"Product Added Succesfully")
+      new ApiResponse(200, deletingProduct, "The Above Fetched Product deleted Succesfully")
     )
-    
 })
 
-const deleteProduct = asyncHandler(async (req,res) => {
-
-    const {productId} = req.params
-
-    if (!isValidObjectId(productId)) {
-        throw new ApiError(403,"Invalid Product Id")
-    }
-
-    const deletingProduct = await Product.findByIdAndDelete(productId)
-    return res.status(200)
-    .json(
-        new ApiResponse(200,deletingProduct,"The Above Fetched Product deleted Succesfully")
-    )
-})
 
 
 
-
-export {addProduct,editProduct,deleteProduct,getAllProduct}
+export { addProduct, editProduct, deleteProduct, getAllProduct }

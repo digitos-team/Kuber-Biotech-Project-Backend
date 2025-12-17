@@ -6,29 +6,24 @@
   "scripts": {
     "dev": "nodemon -r dotenv/config --experimental-json-modules src/index.js"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Irfan-Kazi-27/Ecommerce-Backend.git"
-  },
+  "repository": {},
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "module",
-  "bugs": {
-    "url": "https://github.com/Irfan-Kazi-27/Ecommerce-Backend/issues"
-  },
-  "homepage": "https://github.com/Irfan-Kazi-27/Ecommerce-Backend#readme",
+  "bugs": {},
+  "homepage": "",
   "dependencies": {
     "bcryptjs": "^3.0.2",
     "cloudinary": "^2.7.0",
     "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
+    "google-translate-api-x": "^10.7.2",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.18.0",
     "multer": "^2.0.2",
-    "nodemon": "^3.1.10",
-    "razorpay": "^2.9.6",
-    "resend": "^6.1.0"
+    "nodemon": "^3.1.10"
   }
 }

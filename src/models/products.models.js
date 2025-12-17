@@ -2,18 +2,26 @@ import mongoose from "mongoose";
 
 const productSchema = new mongoose.Schema({
     name:{
-        type:String,
-        required:true
+        en: {
+            type: String,
+            required: true
+        },
+        mr: {
+            type: String,
+            required: true
+        }
     },
     description:{
-        type:String,
-        required:true
+        en: {
+            type: String,
+            required: true
+        },
+        mr: {
+            type: String,
+            required: true
+        }
     },
     price:{
-        type:Number,
-        required:true
-    },
-    stock:{
         type:Number,
         required:true
     },
@@ -24,8 +32,16 @@ const productSchema = new mongoose.Schema({
     }
     ],
     category:{
-        type:String,
-        required:true
+        en: {
+            type: String,
+            required: true,
+            enum: ["Granule Products", "Liquid Products"]
+        },
+        mr: {
+            type: String,
+            required: true,
+            enum: ["ग्रॅन्युल उत्पादने", "द्रव उत्पादने"]
+        }
     }
 },{timestamps:true})
 
