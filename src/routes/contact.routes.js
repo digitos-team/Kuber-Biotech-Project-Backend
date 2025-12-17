@@ -1,5 +1,5 @@
 import { Router } from "express";
-import {createContact,getallContact,deleteContact} from "../controllers/contact.controller.js"
+import {createContact,getallContact,deleteContact} from "../controllers/contact.controllers.js"
 import { IsAdmin } from "../middleware/isAdmin.middlerware.js"
 import { verifyJWT } from "../middleware/auth.middleware.js";
 const router = Router()
