@@ -12,6 +12,9 @@ app.use(cors({
     credentials: true
 }));
 
+//Broucher Router
+import broucherRouter from "./routes/broucher.routes.js"
+app.use("/api/broucher",broucherRouter)
 
 //User Router
 import userRouter from "./routes/user.routes.js"
