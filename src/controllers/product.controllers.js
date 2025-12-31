@@ -37,7 +37,7 @@ const getAllProduct = asyncHandler(async (req, res) => {
 })
 
 const addProduct = asyncHandler(async (req, res) => {
-  const { name, description, price, category } = req.body
+  const { name, description, category } = req.body
   let imageUrl = []
 
 
@@ -51,7 +51,7 @@ const addProduct = asyncHandler(async (req, res) => {
   }
 
 
-  if (!name || !description || !price || !category) {
+  if (!name || !description  || !category) {
     throw new ApiError(403, "Every Field Is required")
   }
 
@@ -80,8 +80,7 @@ const addProduct = asyncHandler(async (req, res) => {
       en: description,
       mr: descriptionMarathi
     },
-    price,
-    images: imageUrl,
+   images: imageUrl,
     category: {
       en: category,
       mr: categoryMap[category]
@@ -127,10 +126,6 @@ const editProduct = asyncHandler(async (req, res) => {
     updateFields["description.mr"] = descriptionMarathi;
   }
 
-  // Handle price update
-  if (req.body.newprice) {
-    updateFields.price = req.body.newprice;
-  }
 
   // Handle category update (bilingual)
   if (req.body.newcategory) {
