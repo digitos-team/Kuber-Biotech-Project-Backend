@@ -10,7 +10,8 @@ app.use(cookieParser())
 app.use('/uploads', express.static(path.join(process.cwd(), 'public/uploads')));
 app.use(cors({
     origin: ['http://localhost:5173', 'http://localhost:5174',
-        'https://kuber-biotech-project-frontend-5akyd3f53-digitos-it-solutions.vercel.app'
+        'https://kuber-biotech-project-frontend-5akyd3f53-digitos-it-solutions.vercel.app',
+        'https://www.kuberbiotech.com'
     ],
     credentials: true
 }));
